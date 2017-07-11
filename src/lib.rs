@@ -45,7 +45,6 @@ impl TrackPoint {
 pub struct Gpx {
     time: DateTime<Utc>,
     pub track_points: Vec<TrackPoint>,
-    document: xmltree::Element,
 }
 impl Gpx {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Gpx> {
@@ -72,7 +71,6 @@ impl Gpx {
                 .filter(|elem| elem.name == "trkpt")
                 .map(|elem| TrackPoint::from_xml_elem(elem))
                 .collect(),
-            document: document,
         })
     }
 }
