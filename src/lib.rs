@@ -88,10 +88,10 @@ impl Gpx {
                         Some(next_point) => {
                             distance += haversine(point, next_point);
                         }
-                        None => return distance
+                        None => return distance,
                     }
                 }
-                None => return distance
+                None => return distance,
             }
         }
     }
@@ -120,7 +120,7 @@ fn haversine(p1: &geo::Point<f64>, p2: &geo::Point<f64>) -> f64 {
     let dlon = lon2 - lon1;
     let dlat = lat2 - lat1;
 
-    let a = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon/2.0).sin().powi(2);
+    let a = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
     let c = 2.0 * a.sqrt().asin();
     c * R
 }
