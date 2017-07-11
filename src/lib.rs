@@ -9,20 +9,24 @@ use std::io::{BufReader, Read};
 mod errors;
 use errors::*;
 
-struct TrackPoint {
+pub struct TrackPoint {
     lat: f64,
     lon: f64,
     elevation_meters: f64,
 }
 impl TrackPoint {
-    fn from_xml(elem: xmltree::Element) -> TrackPoint {
-        unimplemented!()
+    fn from_xml_elem(elem: &xmltree::Element) -> TrackPoint {
+        TrackPoint {
+            lat: elem.attributes.get("lat").unwrap().parse().unwrap(),
+            lon: elem.attributes.get("lon").unwrap().parse().unwrap(),
+            elevation_meters: elem.get_child("ele").unwrap().text.clone().unwrap().parse().unwrap(),
+        }
     }
 }
 
 pub struct Gpx {
     time: String,
-    track_points: Vec<TrackPoint>,
+    pub track_points: Vec<TrackPoint>,
     document: xmltree::Element,
 }
 impl Gpx {
@@ -41,7 +45,13 @@ impl Gpx {
                 .text
                 .clone()
                 .unwrap(),
-            track_points: vec![],
+            track_points: element_get_path(&document, &["trk", "trkseg"])
+                .unwrap()
+                .children
+                .iter()
+                .filter(|elem| elem.name == "trkpt")
+                .map(|elem| TrackPoint::from_xml_elem(elem))
+                .collect(),
             document: document,
         })
     }
