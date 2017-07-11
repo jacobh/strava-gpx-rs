@@ -3,6 +3,7 @@ extern crate error_chain;
 extern crate xmltree;
 extern crate rayon;
 extern crate chrono;
+extern crate geo;
 
 use std::path::Path;
 use std::fs::File;
@@ -14,16 +15,17 @@ mod errors;
 use errors::*;
 
 pub struct TrackPoint {
-    lat: f64,
-    lon: f64,
+    point: geo::Point<f64>,
     elevation_meters: f64,
     time: DateTime<Utc>,
 }
 impl TrackPoint {
     fn from_xml_elem(elem: &xmltree::Element) -> TrackPoint {
         TrackPoint {
-            lat: elem.attributes.get("lat").unwrap().parse().unwrap(),
-            lon: elem.attributes.get("lon").unwrap().parse().unwrap(),
+            point: geo::Point::new(
+                elem.attributes.get("lat").unwrap().parse().unwrap(),
+                elem.attributes.get("lon").unwrap().parse().unwrap(),
+            ),
             elevation_meters: elem.get_child("ele")
                 .unwrap()
                 .text
@@ -73,6 +75,26 @@ impl Gpx {
                 .collect(),
         })
     }
+    fn as_points(&self) -> Vec<&geo::Point<f64>> {
+        self.track_points.iter().map(|x| &x.point).collect()
+    }
+    pub fn distance_meters(&self) -> f64 {
+        let mut iter = self.as_points().into_iter().peekable();
+        let mut distance: f64 = 0.0;
+        loop {
+            match iter.next() {
+                Some(point) => {
+                    match iter.peek() {
+                        Some(next_point) => {
+                            distance += haversine(point, next_point);
+                        }
+                        None => return distance
+                    }
+                }
+                None => return distance
+            }
+        }
+    }
 }
 
 fn element_get_path<'a>(elem: &'a xmltree::Element, path: &[&str]) -> Option<&'a xmltree::Element> {
@@ -85,4 +107,20 @@ fn element_get_path<'a>(elem: &'a xmltree::Element, path: &[&str]) -> Option<&'a
         }
         None => Some(elem),
     }
+}
+
+static R: f64 = 6371.0;
+
+fn haversine(p1: &geo::Point<f64>, p2: &geo::Point<f64>) -> f64 {
+    let lat1 = p1.x().to_radians();
+    let lon1 = p1.y().to_radians();
+    let lat2 = p2.x().to_radians();
+    let lon2 = p2.y().to_radians();
+
+    let dlon = lon2 - lon1;
+    let dlat = lat2 - lat1;
+
+    let a = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon/2.0).sin().powi(2);
+    let c = 2.0 * a.sqrt().asin();
+    c * R
 }
