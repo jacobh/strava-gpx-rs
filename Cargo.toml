@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["Jacob Haslehurst <jacob@haslehurst.net>"]
 
 [dependencies]
+xmltree = "0.4"
+error-chain = "0.10"
