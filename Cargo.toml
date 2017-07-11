@@ -7,3 +7,4 @@ authors = ["Jacob Haslehurst <jacob@haslehurst.net>"]
 xmltree = "0.4"
 error-chain = "0.10"
 rayon = "0.8"
+chrono = "0.4"

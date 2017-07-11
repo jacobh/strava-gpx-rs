@@ -2,11 +2,13 @@
 extern crate error_chain;
 extern crate xmltree;
 extern crate rayon;
+extern crate chrono;
 
 use std::path::Path;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use rayon::prelude::*;
+use chrono::prelude::*;
 
 mod errors;
 use errors::*;
@@ -15,21 +17,33 @@ pub struct TrackPoint {
     lat: f64,
     lon: f64,
     elevation_meters: f64,
-    time: String,
+    time: DateTime<Utc>,
 }
 impl TrackPoint {
     fn from_xml_elem(elem: &xmltree::Element) -> TrackPoint {
         TrackPoint {
             lat: elem.attributes.get("lat").unwrap().parse().unwrap(),
             lon: elem.attributes.get("lon").unwrap().parse().unwrap(),
-            elevation_meters: elem.get_child("ele").unwrap().text.clone().unwrap().parse().unwrap(),
-            time: elem.get_child("time").unwrap().text.clone().unwrap(),
+            elevation_meters: elem.get_child("ele")
+                .unwrap()
+                .text
+                .clone()
+                .unwrap()
+                .parse()
+                .unwrap(),
+            time: elem.get_child("time")
+                .unwrap()
+                .text
+                .clone()
+                .unwrap()
+                .parse()
+                .unwrap(),
         }
     }
 }
 
 pub struct Gpx {
-    time: String,
+    time: DateTime<Utc>,
     pub track_points: Vec<TrackPoint>,
     document: xmltree::Element,
 }
@@ -48,6 +62,8 @@ impl Gpx {
                 .unwrap()
                 .text
                 .clone()
+                .unwrap()
+                .parse()
                 .unwrap(),
             track_points: element_get_path(&document, &["trk", "trkseg"])
                 .unwrap()
