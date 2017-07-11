@@ -10,6 +10,7 @@ use std::fs::File;
 use std::io::{BufReader, Read};
 use rayon::prelude::*;
 use chrono::prelude::*;
+use geo::length::Length;
 
 mod errors;
 use errors::*;
@@ -75,25 +76,11 @@ impl Gpx {
                 .collect(),
         })
     }
-    fn as_points(&self) -> Vec<&geo::Point<f64>> {
-        self.track_points.iter().map(|x| &x.point).collect()
+    fn as_line_string(&self) -> geo::LineString<f64> {
+        geo::LineString(self.track_points.iter().map(|x| x.point).collect())
     }
     pub fn distance_meters(&self) -> f64 {
-        let mut iter = self.as_points().into_iter().peekable();
-        let mut distance: f64 = 0.0;
-        loop {
-            match iter.next() {
-                Some(point) => {
-                    match iter.peek() {
-                        Some(next_point) => {
-                            distance += haversine(point, next_point);
-                        }
-                        None => return distance,
-                    }
-                }
-                None => return distance,
-            }
-        }
+        self.as_line_string().length() * 100.0 * 1000.0
     }
 }
 
@@ -107,20 +94,4 @@ fn element_get_path<'a>(elem: &'a xmltree::Element, path: &[&str]) -> Option<&'a
         }
         None => Some(elem),
     }
-}
-
-static EARTH_RADIUS_KM: f64 = 6371.0;
-
-fn haversine(p1: &geo::Point<f64>, p2: &geo::Point<f64>) -> f64 {
-    let lat1 = p1.x().to_radians();
-    let lon1 = p1.y().to_radians();
-    let lat2 = p2.x().to_radians();
-    let lon2 = p2.y().to_radians();
-
-    let dlon = lon2 - lon1;
-    let dlat = lat2 - lat1;
-
-    let a = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
-    let c = 2.0 * a.sqrt().asin();
-    c * EARTH_RADIUS_KM
 }
