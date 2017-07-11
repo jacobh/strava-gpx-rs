@@ -1,10 +1,12 @@
 #[macro_use]
 extern crate error_chain;
 extern crate xmltree;
+extern crate rayon;
 
 use std::path::Path;
 use std::fs::File;
 use std::io::{BufReader, Read};
+use rayon::prelude::*;
 
 mod errors;
 use errors::*;
@@ -13,6 +15,7 @@ pub struct TrackPoint {
     lat: f64,
     lon: f64,
     elevation_meters: f64,
+    time: String,
 }
 impl TrackPoint {
     fn from_xml_elem(elem: &xmltree::Element) -> TrackPoint {
@@ -20,6 +23,7 @@ impl TrackPoint {
             lat: elem.attributes.get("lat").unwrap().parse().unwrap(),
             lon: elem.attributes.get("lon").unwrap().parse().unwrap(),
             elevation_meters: elem.get_child("ele").unwrap().text.clone().unwrap().parse().unwrap(),
+            time: elem.get_child("time").unwrap().text.clone().unwrap(),
         }
     }
 }
@@ -48,7 +52,7 @@ impl Gpx {
             track_points: element_get_path(&document, &["trk", "trkseg"])
                 .unwrap()
                 .children
-                .iter()
+                .par_iter()
                 .filter(|elem| elem.name == "trkpt")
                 .map(|elem| TrackPoint::from_xml_elem(elem))
                 .collect(),
