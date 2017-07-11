@@ -109,7 +109,7 @@ fn element_get_path<'a>(elem: &'a xmltree::Element, path: &[&str]) -> Option<&'a
     }
 }
 
-static R: f64 = 6371.0;
+static EARTH_RADIUS_KM: f64 = 6371.0;
 
 fn haversine(p1: &geo::Point<f64>, p2: &geo::Point<f64>) -> f64 {
     let lat1 = p1.x().to_radians();
@@ -122,5 +122,5 @@ fn haversine(p1: &geo::Point<f64>, p2: &geo::Point<f64>) -> f64 {
 
     let a = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
     let c = 2.0 * a.sqrt().asin();
-    c * R
+    c * EARTH_RADIUS_KM
 }
