@@ -5,4 +5,7 @@ fn main() {
     println!("parsed commute successfully");
     println!("track points: {}", gpx.track_points.len());
     println!("distance:     {}", gpx.distance_meters());
+    for speed in gpx.speed_meters_per_sec() {
+        println!("{}", speed);
+    }
 }

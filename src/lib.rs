@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate error_chain;
+extern crate itertools;
 extern crate xmltree;
 extern crate rayon;
 extern crate chrono;
@@ -11,6 +12,8 @@ use std::io::{BufReader, Read};
 use rayon::prelude::*;
 use chrono::prelude::*;
 use geo::length::Length;
+use geo::distance::Distance;
+use itertools::Itertools;
 
 mod errors;
 use errors::*;
@@ -81,6 +84,17 @@ impl Gpx {
     }
     pub fn distance_meters(&self) -> f64 {
         self.as_line_string().length() * 100.0 * 1000.0
+    }
+    pub fn speed_meters_per_sec(&self) -> Vec<f64> {
+        self.track_points
+            .iter()
+            .tuple_windows()
+            .map(|(p1, p2)| {
+                let distance_meters = p1.point.distance(&p2.point) * 100.0 * 1000.0;
+                let secs = p2.time.signed_duration_since(p1.time).num_seconds() as f64;
+                distance_meters / 1000.0 / secs * 60.0 * 60.0
+            })
+            .collect()
     }
 }
 
