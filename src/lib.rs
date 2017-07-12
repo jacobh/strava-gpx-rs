@@ -105,7 +105,7 @@ impl Gpx {
             .map(|(p1, p2)| {
                 let distance_meters = p1.point.distance(&p2.point) * 100.0 * 1000.0;
                 let secs = p2.time.signed_duration_since(p1.time).num_seconds() as f64;
-                distance_meters / 1000.0 / secs * 60.0 * 60.0
+                distance_meters / secs
             })
             .collect()
     }
