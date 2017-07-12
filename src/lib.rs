@@ -85,6 +85,19 @@ impl Gpx {
     pub fn distance_meters(&self) -> f64 {
         self.as_line_string().length() * 100.0 * 1000.0
     }
+    pub fn total_elevation_gain_meters(&self) -> f64 {
+        self.track_points.iter().tuple_windows().fold(
+            0.0,
+            |acc, (p1, p2)| {
+                let gain = p2.elevation_meters - p1.elevation_meters;
+                if gain > 0.0 {
+                    acc + gain
+                } else {
+                    acc
+                }
+            },
+        )
+    }
     pub fn speed_meters_per_sec(&self) -> Vec<f64> {
         self.track_points
             .iter()
