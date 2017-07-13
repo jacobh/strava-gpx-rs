@@ -26,7 +26,7 @@ type BeatsPerMinute = f64;
 type RevolutionsPerMinute = f64;
 
 pub struct TrackPoint {
-    point: geo::Point<f64>,
+    pub point: geo::Point<f64>,
     elevation_meters: f64,
     time: DateTime<Utc>,
     extensions: Vec<TrackPointExtension>,
@@ -180,9 +180,17 @@ impl TrackPointCollection for Gpx {
     }
 }
 
-struct Circle {
+pub struct Circle {
     centroid: geo::Point<f64>,
     radius: Meters,
+}
+impl Circle {
+    pub fn new(lat: f64, lon: f64, radius: Meters) -> Circle {
+        Circle {
+            centroid: geo::Point::new(lat, lon),
+            radius: radius,
+        }
+    }
 }
 impl Contains<geo::Point<f64>> for Circle {
     fn contains(&self, p: &geo::Point<f64>) -> bool {
