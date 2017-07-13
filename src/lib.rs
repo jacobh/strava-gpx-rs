@@ -41,14 +41,14 @@ impl TrackPoint {
             elevation_meters: elem.get_child("ele")
                 .unwrap()
                 .text
-                .clone()
+                .as_ref()
                 .unwrap()
                 .parse()
                 .unwrap(),
             time: elem.get_child("time")
                 .unwrap()
                 .text
-                .clone()
+                .as_ref()
                 .unwrap()
                 .parse()
                 .unwrap(),
@@ -73,7 +73,7 @@ pub enum TrackPointExtension {
 }
 impl TrackPointExtension {
     fn from_xml_elem(elem: &xmltree::Element) -> TrackPointExtension {
-        let elem_text = elem.text.clone().unwrap();
+        let elem_text = elem.text.as_ref().unwrap();
         match elem.name.as_str() {
             "gpxtpx:atemp" => TrackPointExtension::AirTemperature(elem_text.parse().unwrap()),
             "gpxtpx:wtemp" => TrackPointExtension::WaterTemperature(elem_text.parse().unwrap()),
@@ -103,7 +103,7 @@ impl Gpx {
             time: element_get_path(&document, &["metadata", "time"])
                 .unwrap()
                 .text
-                .clone()
+                .as_ref()
                 .unwrap()
                 .parse()
                 .unwrap(),
