@@ -20,10 +20,16 @@ use itertools::Itertools;
 mod errors;
 use errors::*;
 
+type Celsius = f64;
+type Meters = f64;
+type BeatsPerMinute = f64;
+type RevolutionsPerMinute = f64;
+
 pub struct TrackPoint {
     point: geo::Point<f64>,
     elevation_meters: f64,
     time: DateTime<Utc>,
+    extensions: Vec<TrackPointExtension>,
 }
 impl TrackPoint {
     fn from_xml_elem(elem: &xmltree::Element) -> TrackPoint {
@@ -46,6 +52,35 @@ impl TrackPoint {
                 .unwrap()
                 .parse()
                 .unwrap(),
+            extensions: element_get_path(&elem, &["extensions", "gpxtpx:TrackPointExtension"])
+                .map(|elem| {
+                    elem.children
+                        .iter()
+                        .map(|child| TrackPointExtension::from_xml_elem(child))
+                        .collect()
+                })
+                .unwrap_or_default(),
+        }
+    }
+}
+
+pub enum TrackPointExtension {
+    AirTemperature(Celsius),
+    WaterTemperature(Celsius),
+    Depth(Meters),
+    HeartRate(BeatsPerMinute),
+    Cadence(RevolutionsPerMinute),
+}
+impl TrackPointExtension {
+    fn from_xml_elem(elem: &xmltree::Element) -> TrackPointExtension {
+        let elem_text = elem.text.clone().unwrap();
+        match elem.name.as_str() {
+            "gpxtpx:atemp" => TrackPointExtension::AirTemperature(elem_text.parse().unwrap()),
+            "gpxtpx:wtemp" => TrackPointExtension::WaterTemperature(elem_text.parse().unwrap()),
+            "gpxtpx:depth" => TrackPointExtension::Depth(elem_text.parse().unwrap()),
+            "gpxtpx:hr" => TrackPointExtension::HeartRate(elem_text.parse().unwrap()),
+            "gpxtpx:cad" => TrackPointExtension::Cadence(elem_text.parse().unwrap()),
+            _ => unimplemented!(),
         }
     }
 }
@@ -100,7 +135,7 @@ pub trait TrackPointCollection {
     fn as_line_string(&self) -> geo::LineString<f64> {
         geo::LineString(self.get_track_points().iter().map(|x| x.point).collect())
     }
-    fn distance_meters(&self) -> f64 {
+    fn distance_meters(&self) -> Meters {
         self.as_line_string().length() * 100.0 * 1000.0
     }
     fn duration(&self) -> Duration {
@@ -109,7 +144,7 @@ pub trait TrackPointCollection {
             .time
             .signed_duration_since(track_points[0].time)
     }
-    fn total_elevation_gain_meters(&self) -> f64 {
+    fn total_elevation_gain_meters(&self) -> Meters {
         self.get_track_points().iter().tuple_windows().fold(
             0.0,
             |acc, (p1, p2)| {
@@ -147,10 +182,10 @@ impl TrackPointCollection for Gpx {
 
 struct Circle {
     centroid: geo::Point<f64>,
-    radius: f64,
+    radius: Meters,
 }
 impl Contains<geo::Point<f64>> for Circle {
     fn contains(&self, p: &geo::Point<f64>) -> bool {
-        self.radius > self.centroid.distance(p)
+        self.radius > (self.centroid.distance(p) * 100.0 * 1000.0)
     }
 }

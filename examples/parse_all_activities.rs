@@ -6,7 +6,7 @@ use rayon::prelude::*;
 use strava_gpx::TrackPointCollection;
 
 
-#![allow(dead_code)]
+#[allow(dead_code)]
 fn pause() {
     use std::io;
     use std::io::prelude::*;
