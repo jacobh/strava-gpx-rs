@@ -14,6 +14,7 @@ use chrono::prelude::*;
 use chrono::Duration;
 use geo::length::Length;
 use geo::distance::Distance;
+use geo::contains::Contains;
 use itertools::Itertools;
 
 mod errors;
@@ -141,5 +142,16 @@ impl TrackPointCollection for Vec<TrackPoint> {
 impl TrackPointCollection for Gpx {
     fn get_track_points(&self) -> &Vec<TrackPoint> {
         &self.track_points
+    }
+}
+
+struct Circle {
+    centroid: geo::Point<f64>,
+    radius: f64,
+
+}
+impl Contains<geo::Point<f64>> for Circle {
+    fn contains(&self, p: &geo::Point<f64>) -> bool {
+        self.radius > self.centroid.distance(p)
     }
 }
