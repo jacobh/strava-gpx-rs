@@ -11,6 +11,7 @@ use std::fs::File;
 use std::io::{BufReader, Read};
 use rayon::prelude::*;
 use chrono::prelude::*;
+use chrono::Duration;
 use geo::length::Length;
 use geo::distance::Distance;
 use itertools::Itertools;
@@ -79,36 +80,6 @@ impl Gpx {
                 .collect(),
         })
     }
-    fn as_line_string(&self) -> geo::LineString<f64> {
-        geo::LineString(self.track_points.iter().map(|x| x.point).collect())
-    }
-    pub fn distance_meters(&self) -> f64 {
-        self.as_line_string().length() * 100.0 * 1000.0
-    }
-    pub fn total_elevation_gain_meters(&self) -> f64 {
-        self.track_points.iter().tuple_windows().fold(
-            0.0,
-            |acc, (p1, p2)| {
-                let gain = p2.elevation_meters - p1.elevation_meters;
-                if gain > 0.0 {
-                    acc + gain
-                } else {
-                    acc
-                }
-            },
-        )
-    }
-    pub fn speed_meters_per_sec(&self) -> Vec<f64> {
-        self.track_points
-            .iter()
-            .tuple_windows()
-            .map(|(p1, p2)| {
-                let distance_meters = p1.point.distance(&p2.point) * 100.0 * 1000.0;
-                let secs = p2.time.signed_duration_since(p1.time).num_seconds() as f64;
-                distance_meters / secs
-            })
-            .collect()
-    }
 }
 
 fn element_get_path<'a>(elem: &'a xmltree::Element, path: &[&str]) -> Option<&'a xmltree::Element> {
@@ -120,5 +91,55 @@ fn element_get_path<'a>(elem: &'a xmltree::Element, path: &[&str]) -> Option<&'a
             }
         }
         None => Some(elem),
+    }
+}
+
+pub trait TrackPointCollection {
+    fn get_track_points(&self) -> &Vec<TrackPoint>;
+    fn as_line_string(&self) -> geo::LineString<f64> {
+        geo::LineString(self.get_track_points().iter().map(|x| x.point).collect())
+    }
+    fn distance_meters(&self) -> f64 {
+        self.as_line_string().length() * 100.0 * 1000.0
+    }
+    fn duration(&self) -> Duration {
+        let track_points = self.get_track_points();
+        track_points[track_points.len() - 1]
+            .time
+            .signed_duration_since(track_points[0].time)
+    }
+    fn total_elevation_gain_meters(&self) -> f64 {
+        self.get_track_points().iter().tuple_windows().fold(
+            0.0,
+            |acc, (p1, p2)| {
+                let gain = p2.elevation_meters - p1.elevation_meters;
+                if gain > 0.0 {
+                    acc + gain
+                } else {
+                    acc
+                }
+            },
+        )
+    }
+    fn as_speed_meters_per_sec(&self) -> Vec<f64> {
+        self.get_track_points()
+            .iter()
+            .tuple_windows()
+            .map(|(p1, p2)| {
+                let distance_meters = p1.point.distance(&p2.point) * 100.0 * 1000.0;
+                let secs = p2.time.signed_duration_since(p1.time).num_seconds() as f64;
+                distance_meters / secs
+            })
+            .collect()
+    }
+}
+impl TrackPointCollection for Vec<TrackPoint> {
+    fn get_track_points(&self) -> &Vec<TrackPoint> {
+        self
+    }
+}
+impl TrackPointCollection for Gpx {
+    fn get_track_points(&self) -> &Vec<TrackPoint> {
+        &self.track_points
     }
 }
