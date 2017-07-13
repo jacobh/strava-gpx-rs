@@ -148,7 +148,6 @@ impl TrackPointCollection for Gpx {
 struct Circle {
     centroid: geo::Point<f64>,
     radius: f64,
-
 }
 impl Contains<geo::Point<f64>> for Circle {
     fn contains(&self, p: &geo::Point<f64>) -> bool {
