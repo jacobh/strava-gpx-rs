@@ -168,6 +168,15 @@ pub trait TrackPointCollection {
             })
             .collect()
     }
+    fn max_distance_apart(&self, other_tpc: &Self) -> Meters {
+        let line_string = self.as_line_string();
+        other_tpc
+            .get_track_points()
+            .par_iter()
+            .map(|x| line_string.distance(&x.point))
+            .reduce_with(|a, b| if a > b { a } else { b })
+            .unwrap() * 100.0 * 1000.0
+    }
 }
 impl TrackPointCollection for Vec<TrackPoint> {
     fn get_track_points(&self) -> &Vec<TrackPoint> {

@@ -51,19 +51,52 @@ fn main() {
 
     let commute_gpxs_len = commute_gpxs.len();
 
-    for commute in commute_gpxs {
-        let avg_speed: f64 = {
-            commute.distance_meters() / commute.duration().num_seconds() as f64 / 1000.0 * 60.0 *
-                60.0
-        };
-        println!(
-            "{}\t\t{}km\t\t{}km/h",
-            commute.duration(),
-            commute.distance_meters() / 1000.0,
-            avg_speed
-        );
-    }
+    // for commute in &commute_gpxs {
+    //     let avg_speed: f64 = {
+    //         commute.distance_meters() / commute.duration().num_seconds() as f64 / 1000.0 * 60.0 *
+    //             60.0
+    //     };
+    //     println!(
+    //         "{}\t\t{}km\t\t{}km/h",
+    //         commute.duration(),
+    //         commute.distance_meters() / 1000.0,
+    //         avg_speed
+    //     );
+    // }
 
-    println!("total:    {}", gpxs.len());
-    println!("commutes: {}", commute_gpxs_len);
+    const MAX_DISTANCE_THRESHOLD: f64 = 20.0;
+
+    let grouped_commutes: Vec<Vec<&strava_gpx::Gpx>> = commute_gpxs.iter().fold(
+        vec![],
+        |mut acc, &x| match acc.is_empty() {
+            true => {
+                acc.push(vec![x]);
+                return acc;
+            }
+            false => {
+                let mut inserted = false;
+                for group in acc.iter_mut() {
+                    let mean_max_distance_from_group: f64 = {
+                        group
+                            .iter()
+                            .map(|gpx| gpx.max_distance_apart(x))
+                            .sum::<f64>() / group.len() as f64
+                    };
+                    if mean_max_distance_from_group < MAX_DISTANCE_THRESHOLD {
+                        group.push(x);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if !inserted {
+                    acc.push(vec![x]);
+                }
+                return acc;
+            }
+        },
+    );
+
+    println!("total:          {}", gpxs.len());
+    println!("commutes:       {}", commute_gpxs_len);
+    println!("commute groups: {}", grouped_commutes.len());
 }
