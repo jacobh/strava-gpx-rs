@@ -7,3 +7,5 @@ Cargo.lock
 examples/data
 
 .env
+
+*.jpg

@@ -218,7 +218,7 @@ impl Heading for geo::Point<f64> {
 
         let x = diff_lng.sin() * lat2.cos();
         let y = lat1.cos() * lat2.sin() - (lat1.sin() * lat2.cos() * diff_lng.cos());
-        
+
         let initial_bearing = x.atan2(y).to_degrees();
         (initial_bearing + 360.0) % 360.0
     }

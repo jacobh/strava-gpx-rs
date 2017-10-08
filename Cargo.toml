@@ -13,3 +13,5 @@ itertools = "0.6"
 
 [dev-dependencies]
 glob = "0.2"
+reqwest = "0.8"
+dotenv = "0.10"
