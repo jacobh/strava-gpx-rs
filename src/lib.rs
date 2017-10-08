@@ -28,7 +28,7 @@ type RevolutionsPerMinute = f64;
 pub struct TrackPoint {
     pub point: geo::Point<f64>,
     elevation_meters: f64,
-    time: DateTime<Utc>,
+    pub time: DateTime<Utc>,
     extensions: Vec<TrackPointExtension>,
 }
 impl TrackPoint {
