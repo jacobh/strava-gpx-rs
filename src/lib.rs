@@ -1,10 +1,10 @@
+extern crate chrono;
 #[macro_use]
 extern crate error_chain;
-extern crate itertools;
-extern crate xmltree;
-extern crate rayon;
-extern crate chrono;
 extern crate geo;
+extern crate itertools;
+extern crate rayon;
+extern crate xmltree;
 
 use std::path::Path;
 use std::fs::File;
@@ -61,6 +61,13 @@ impl TrackPoint {
                 })
                 .unwrap_or_default(),
         }
+    }
+    pub fn heading_degrees(&self, next_point: &TrackPoint) -> f64 {
+        let y = (next_point.point.lng() - self.point.lng()).sin() * next_point.point.lat().cos();
+        let x = self.point.lat().cos() * next_point.point.lat().sin()
+            - self.point.lat().sin() * next_point.point.lat().cos()
+                * (next_point.point.lng() - self.point.lng()).cos();
+        y.atan2(x).to_degrees()
     }
 }
 
@@ -120,12 +127,10 @@ impl Gpx {
 
 fn element_get_path<'a>(elem: &'a xmltree::Element, path: &[&str]) -> Option<&'a xmltree::Element> {
     match path.split_first() {
-        Some((child_name, path)) => {
-            match elem.get_child(*child_name) {
-                Some(child) => element_get_path(child, path),
-                None => None,
-            }
-        }
+        Some((child_name, path)) => match elem.get_child(*child_name) {
+            Some(child) => element_get_path(child, path),
+            None => None,
+        },
         None => Some(elem),
     }
 }
@@ -145,17 +150,17 @@ pub trait TrackPointCollection {
             .signed_duration_since(track_points[0].time)
     }
     fn total_elevation_gain_meters(&self) -> Meters {
-        self.get_track_points().iter().tuple_windows().fold(
-            0.0,
-            |acc, (p1, p2)| {
+        self.get_track_points()
+            .iter()
+            .tuple_windows()
+            .fold(0.0, |acc, (p1, p2)| {
                 let gain = p2.elevation_meters - p1.elevation_meters;
                 if gain > 0.0 {
                     acc + gain
                 } else {
                     acc
                 }
-            },
-        )
+            })
     }
     fn as_speed_meters_per_sec(&self) -> Vec<f64> {
         self.get_track_points()
@@ -204,5 +209,24 @@ impl Circle {
 impl Contains<geo::Point<f64>> for Circle {
     fn contains(&self, p: &geo::Point<f64>) -> bool {
         self.radius > (self.centroid.distance(p) * 100.0 * 1000.0)
+    }
+}
+
+pub trait Heading {
+    fn heading_degrees(&self, other: &Self) -> f64;
+}
+
+impl Heading for geo::Point<f64> {
+    fn heading_degrees(&self, other: &Self) -> f64 {
+        let y = (other.lng() - self.lng()).sin() * other.lat().cos();
+        let x = self.lat().cos() * other.lat().sin()
+            - self.lat().sin() * other.lat().cos() * (other.lng() - self.lng()).cos();
+        y.atan2(x).to_degrees()
+    }
+}
+
+impl Heading for TrackPoint {
+    fn heading_degrees(&self, other: &Self) -> f64 {
+        self.point.heading_degrees(&other.point)
     }
 }

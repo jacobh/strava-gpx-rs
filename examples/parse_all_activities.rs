@@ -1,8 +1,8 @@
-extern crate strava_gpx;
-extern crate glob;
-extern crate rayon;
 extern crate geo;
+extern crate glob;
 extern crate itertools;
+extern crate rayon;
+extern crate strava_gpx;
 
 use geo::contains::Contains;
 use itertools::Itertools;
@@ -43,9 +43,9 @@ fn main() {
 
     let commute_gpxs: Vec<_> = gpxs.iter()
         .filter(|gpx| {
-            home_region.contains(&gpx.track_points[0].point) &&
-                work_region.contains(&gpx.track_points[gpx.track_points.len() - 1].point) &&
-                gpx.distance_meters() < 6000.0
+            home_region.contains(&gpx.track_points[0].point)
+                && work_region.contains(&gpx.track_points[gpx.track_points.len() - 1].point)
+                && gpx.distance_meters() < 6000.0
         })
         .sorted_by(|a, b| Ord::cmp(&a.duration(), &b.duration()));
 
