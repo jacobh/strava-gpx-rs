@@ -34,10 +34,11 @@ fn main() {
         .by_ref()
         .tuple_windows()
         .map(|(tp1, tp2): (&TrackPoint, &TrackPoint)| {
+            println!("{}, {}", tp1.point.x(), tp1.point.y());
             StreetViewParams {
-                lat: tp1.point.lat(),
-                lng: tp1.point.lng(),
-                heading: tp1.heading_degrees(tp2) + 90.0,
+                lat: tp1.point.x(),
+                lng: tp1.point.y(),
+                heading: tp1.heading_degrees(tp2),
             }
         })
         .collect();
@@ -46,7 +47,7 @@ fn main() {
         let url = reqwest::Url::parse_with_params(
             "https://maps.googleapis.com/maps/api/streetview",
             &[
-                ("location", format!("{},{}", point.lng, point.lat)),
+                ("location", format!("{},{}", point.lat, point.lng)),
                 ("heading", (point.heading as i32).to_string()),
                 ("size", "640x640".to_owned()),
                 ("fov", "120".to_owned()),
