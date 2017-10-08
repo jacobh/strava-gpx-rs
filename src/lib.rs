@@ -211,10 +211,16 @@ pub trait Heading {
 
 impl Heading for geo::Point<f64> {
     fn heading_degrees(&self, other: &Self) -> f64 {
-        let y = (other.lng() - self.lng()).sin() * other.lat().cos();
-        let x = self.lat().cos() * other.lat().sin()
-            - self.lat().sin() * other.lat().cos() * (other.lng() - self.lng()).cos();
-        y.atan2(x).to_degrees()
+        // from https://gist.github.com/jeromer/2005586
+        let lat1 = self.lat().to_radians();
+        let lat2 = other.lat().to_radians();
+        let diff_lng = (other.lng() - self.lng()).to_radians();
+
+        let x = diff_lng.sin() * lat2.cos();
+        let y = lat1.cos() * lat2.sin() - (lat1.sin() * lat2.cos() * diff_lng.cos());
+        
+        let initial_bearing = x.atan2(y).to_degrees();
+        (initial_bearing + 360.0) % 360.0
     }
 }
 
