@@ -4,11 +4,11 @@ version = "0.1.0"
 authors = ["Jacob Haslehurst <jacob@haslehurst.net>"]
 
 [dependencies]
-xmltree = "0.4"
-error-chain = "0.10"
+xmltree = "0.6"
+error-chain = "0.11"
 rayon = "0.8"
 chrono = "0.4"
-geo = "0.4"
+geo = "0.6"
 itertools = "0.6"
 
 [dev-dependencies]
