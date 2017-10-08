@@ -62,13 +62,6 @@ impl TrackPoint {
                 .unwrap_or_default(),
         }
     }
-    pub fn heading_degrees(&self, next_point: &TrackPoint) -> f64 {
-        let y = (next_point.point.lng() - self.point.lng()).sin() * next_point.point.lat().cos();
-        let x = self.point.lat().cos() * next_point.point.lat().sin()
-            - self.point.lat().sin() * next_point.point.lat().cos()
-                * (next_point.point.lng() - self.point.lng()).cos();
-        y.atan2(x).to_degrees()
-    }
 }
 
 pub enum TrackPointExtension {
